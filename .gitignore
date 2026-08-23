@@ -22,3 +22,7 @@ dist/
 build/
 *.egg-info/
 __pycache__/
+hello.py
+search_data.py
+test_clean.py
+test_translation.py
