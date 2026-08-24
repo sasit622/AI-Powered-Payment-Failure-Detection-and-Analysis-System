@@ -7,7 +7,7 @@ __pycache__/
 
 # Environment variables
 .env
-
+uv.lock
 # IDE
 .vscode/
 .idea/

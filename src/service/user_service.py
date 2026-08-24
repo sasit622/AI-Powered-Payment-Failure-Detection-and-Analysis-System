@@ -1,4 +1,4 @@
-from myapp.repository.user_repo import get_user,get_password
+from src.repository.user_repo import get_user,get_password
 def check_user(id):
     user=get_user(id)
     if user is None:
