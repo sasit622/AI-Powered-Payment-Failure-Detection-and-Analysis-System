@@ -2,6 +2,16 @@ from Backend.service.speed_service import check_internet_speed
 from Backend.service.user_query import query_response
 from Backend.repository.user_repo import get_user, save_data
 
+import re
+
+def clean_ai_response(response):
+    # Remove Markdown symbols and special characters
+    response = re.sub(r'[^a-zA-Z0-9\s.,:₹()-]', '', response)
+
+    # Remove extra spaces
+    response = re.sub(r'\s+', ' ', response).strip()
+
+    return response
 
 def analyze_error(sender_id, amount, receiver_id):
 
@@ -46,6 +56,7 @@ Do not invent information.
 """
 
         response = query_response(prompt)
+        response = clean_ai_response(response)
 
         return {
             "status": "failed",

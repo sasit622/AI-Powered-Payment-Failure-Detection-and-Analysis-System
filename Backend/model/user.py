@@ -27,3 +27,7 @@ class AgentRequest(BaseModel):
 class PaymentRequest(BaseModel):
     amount: float
     receiver_id: int
+
+class LoanRequest(BaseModel):
+    user_id: str
+    name: str

@@ -1,8 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from Backend.model.user import AgentRequest,PaymentRequest
+from Backend.model.user import AgentRequest, AnalysisRequest, PaymentRequest, LoanRequest
 from Backend import session
 from Backend.service.agent_service import analyze_error
+from Backend.service.user_service import analyze_user_transactions
 router = APIRouter(
     prefix="/agent",
     tags=["AI Failure Agent"]
@@ -46,10 +47,40 @@ def authenticate_user(user_id: int, password: str):
         "message": "Authentication successful"
     }
 
-class PaymentRequest(BaseModel):
-    amount: float
-    receiver_id: int
 
+
+@router.post("/check-loan")
+def check_loan(request: LoanRequest):
+
+    user = get_user(request.user_id)
+
+    if user is None:
+        return {
+            "status": "failed",
+            "message": "User ID not found"
+        }
+
+    if user["name"].lower() != request.name.lower():
+        return {
+            "status": "failed",
+            "message": "User ID and name do not match"
+        }
+
+    loan = user.get("Loan", {})
+
+    if loan.get("status", "").lower() == "yes":
+        return {
+            "status": "success",
+            "has_loan": True,
+            "loan_amount": loan.get("amount"),
+            "due_date": loan.get("due_date")
+        }
+
+    return {
+        "status": "success",
+        "has_loan": False,
+        "message": "You do not have an active loan"
+    }
 
 @router.post("/pay")
 def pay(request: PaymentRequest):
@@ -70,12 +101,25 @@ def pay(request: PaymentRequest):
     )
 
 @router.post("/analyze")
-def analyze(request: AgentRequest):
+def analyze(request: AnalysisRequest):
 
-    return analyze_error(
-        amount=request.amount,
-        balance=request.balance,
-        authenticated=request.authenticated,
-        bank_status=request.bank_status,
-        failure_reason=request.failure_reason
+    # Check authentication
+    if session.current_sender_id is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Please authenticate first"
+        )
+
+    from Backend.repository.user_repo import get_user
+    user = get_user(session.current_sender_id)
+
+    if user is None:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    return analyze_user_transactions(
+        session.current_sender_id,
+        user
     )

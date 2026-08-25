@@ -3,7 +3,10 @@
         "1": {
             "name": "Sasi",
             "pass": "123",
-            "bank_balance": 3498.0,
+            "Loan": {
+                "status": "no"
+            },
+            "bank_balance": 3496.0,
             "transactions": [
                 {
                     "transaction_id": "TXN001",
@@ -42,7 +45,12 @@
         "2": {
             "name": "Arun",
             "pass": "456",
-            "bank_balance": 12002.0,
+            "bank_balance": 12004.0,
+            "Loan": {
+                "status": "Yes",
+                "amount": 20000,
+                "due_date": "over"
+            },
             "transactions": [
                 {
                     "transaction_id": "TXN005",
@@ -82,6 +90,9 @@
             "name": "Priya",
             "pass": "789",
             "bank_balance": 800,
+            "Loan": {
+                "status": "no"
+            },
             "transactions": [
                 {
                     "transaction_id": "TXN009",

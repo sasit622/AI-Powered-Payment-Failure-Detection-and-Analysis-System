@@ -63,16 +63,26 @@ if not st.session_state.authenticated:
                 st.session_state.user_id = data["user_id"]
 
                 st.success("Login successful!")
+
                 st.rerun()
 
             else:
 
-                st.error(
-                    data.get(
-                        "reason",
-                        "Authentication failed"
+                reason = data.get("reason", "")
+
+                if reason == "user_not_found":
+                    st.error(
+                        f"❌ User ID {int(user_id)} does not exist. "
+                        "Please check your User ID."
                     )
-                )
+                elif reason == "invalid_password":
+                    st.error(
+                        "❌ Incorrect password. Please try again."
+                    )
+                else:
+                    st.error(
+                        "❌ Authentication failed. Please try again."
+                    )
 
         except requests.exceptions.ConnectionError:
 
@@ -92,6 +102,7 @@ else:
     )
 
     st.divider()
+
 
     # -------------------------
     # PAYMENT
@@ -127,7 +138,9 @@ else:
 
             if response.status_code == 200:
 
-                st.success("Payment request completed")
+                st.success(
+                    "Payment request completed"
+                )
 
                 st.json(data)
 
@@ -143,7 +156,9 @@ else:
                 "Cannot connect to FastAPI server."
             )
 
+
     st.divider()
+
 
     # -------------------------
     # AI ANALYSIS
@@ -161,14 +176,27 @@ else:
         try:
 
             response = requests.post(
-                f"{API_URL}/agent/analyze"
+                f"{API_URL}/agent/analyze",
+                json={
+                    "user_id": int(st.session_state.user_id)
+                }
             )
 
-            data = response.json()
+            # Safely parse JSON — server may return empty/HTML on errors
+            try:
+                data = response.json()
+            except Exception:
+                st.error(
+                    f"❌ Server error (status {response.status_code}). "
+                    "Please log out and log in again, then retry."
+                )
+                st.stop()
 
             if response.status_code == 200:
 
-                st.success("Analysis completed")
+                st.success(
+                    "✅ Analysis completed"
+                )
 
                 st.subheader("AI Analysis")
 
@@ -182,6 +210,7 @@ else:
                 col1, col2, col3 = st.columns(3)
 
                 with col1:
+
                     st.metric(
                         "Total Transactions",
                         data.get(
@@ -191,6 +220,7 @@ else:
                     )
 
                 with col2:
+
                     st.metric(
                         "Successful",
                         data.get(
@@ -200,6 +230,7 @@ else:
                     )
 
                 with col3:
+
                     st.metric(
                         "Failed",
                         data.get(
@@ -208,12 +239,18 @@ else:
                         )
                     )
 
+            elif response.status_code == 401:
+
+                st.warning(
+                    "⚠️ Session expired. Please log out and log in again."
+                )
+
             else:
 
                 st.error(
                     data.get(
                         "detail",
-                        "Analysis failed"
+                        "Analysis failed. Please try again."
                     )
                 )
 
@@ -223,7 +260,120 @@ else:
                 "Cannot connect to FastAPI server."
             )
 
+
     st.divider()
+
+
+    # -------------------------
+    # LOAN CHECK
+    # -------------------------
+
+    st.subheader("🏦 Check Loan Status")
+
+    st.write(
+        "Enter your User ID and Name to check your loan details."
+    )
+
+    loan_user_id = st.number_input(
+        "Loan User ID",
+        min_value=1,
+        step=1,
+        key="loan_user_id"
+    )
+
+    loan_name = st.text_input(
+        "Name",
+        key="loan_name"
+    )
+
+    if st.button("Check Loan"):
+
+        if not loan_name.strip():
+
+            st.warning(
+                "Please enter your name."
+            )
+
+        else:
+
+            try:
+
+                response = requests.post(
+                    f"{API_URL}/agent/check-loan",
+                    json={
+                        "user_id": str(loan_user_id),
+                        "name": loan_name
+                    }
+                )
+
+                data = response.json()
+
+                if response.status_code == 200:
+
+                    # -------------------------
+                    # USER HAS LOAN
+                    # -------------------------
+
+                    if data.get("has_loan"):
+
+                        st.success(
+                            "Loan found"
+                        )
+
+                        st.subheader(
+                            "Loan Details"
+                        )
+
+                        st.write(
+                            "**Loan Status:** Yes"
+                        )
+
+                        st.write(
+                            f"**Loan Amount:** ₹{data.get('loan_amount')}"
+                        )
+
+                        st.write(
+                            f"**Due Date:** {data.get('due_date')}"
+                        )
+
+                    # -------------------------
+                    # USER DOES NOT HAVE LOAN
+                    # -------------------------
+
+                    else:
+
+                        st.info(
+                            "Loan Status: No"
+                        )
+
+                        st.write(
+                            data.get(
+                                "message",
+                                "You do not have an active loan."
+                            )
+                        )
+
+                else:
+
+                    st.error(
+                        data.get(
+                            "detail",
+                            data.get(
+                                "message",
+                                "Failed to check loan details."
+                            )
+                        )
+                    )
+
+            except requests.exceptions.ConnectionError:
+
+                st.error(
+                    "Cannot connect to FastAPI server."
+                )
+
+
+    st.divider()
+
 
     # -------------------------
     # LOGOUT
