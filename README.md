@@ -1,4 +1,4 @@
-# 💳 AI Payment Agent
+# 💳 AI-Powered Payment Failure Detection and Analysis System
 
 An AI-powered payment application that lets users log in, send money, check loan status, and get AI-generated analysis of their past transactions — including insights into why certain payments failed.
 
