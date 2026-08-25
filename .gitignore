@@ -8,6 +8,7 @@ __pycache__/
 # Environment variables
 .env
 uv.lock
+pyproject.toml
 # IDE
 .vscode/
 .idea/

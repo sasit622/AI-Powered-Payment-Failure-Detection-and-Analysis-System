@@ -1,7 +1,10 @@
 from fastapi import APIRouter
 from Backend.service.speed_service import check_internet_speed
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/agent",
+    tags=["AI Failure Agent"]
+)
 
 
 @router.get("/internet-speed")
